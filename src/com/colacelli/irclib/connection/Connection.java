@@ -215,6 +215,8 @@ public final class Connection implements Listenable {
                     }
             }
         }
+
+        disconnect();
     }
 
     private void login(User user) throws IOException {
