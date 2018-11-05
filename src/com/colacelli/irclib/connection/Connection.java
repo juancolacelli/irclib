@@ -52,11 +52,11 @@ public final class Connection implements Listenable {
         onPrivateMessageListeners = new ArrayList<>();
         onNickChangeListeners = new ArrayList<>();
 
-        addListener(RawCode.LOGGED_IN, (connection, message, rawCode, args) -> {
+        addListener(RawCode.LOGGED_IN.getCode(), (connection, message, rawCode, args) -> {
             onConnectListeners.forEach((listener) -> listener.onConnect(this, server, user));
         });
 
-        addListener(RawCode.NICKNAME_IN_USE, (connection, message, rawCode, args) -> {
+        addListener(RawCode.NICKNAME_IN_USE.getCode(), (connection, message, rawCode, args) -> {
             nick(user.getNick() + (new Random()).nextInt(9));
         });
 
@@ -297,18 +297,6 @@ public final class Connection implements Listenable {
         return user;
     }
 
-    private void addListener(RawCode rawCode, OnRawCodeListener listener) {
-        ArrayList<OnRawCodeListener> currentListeners = onRawCodeListeners.get(rawCode.getCode());
-
-        if (currentListeners == null) {
-            currentListeners = new ArrayList<>();
-        }
-
-        currentListeners.add(listener);
-
-        onRawCodeListeners.put(rawCode.getCode(), currentListeners);
-    }
-
     private void addListener(String command, OnServerMessageListener listener) {
         command = command.toUpperCase();
 
@@ -371,5 +359,18 @@ public final class Connection implements Listenable {
     @Override
     public void addListener(OnNickChangeListener listener) {
         onNickChangeListeners.add(listener);
+    }
+
+    @Override
+    public void addListener(int rawCode, OnRawCodeListener listener) {
+        ArrayList<OnRawCodeListener> currentListeners = onRawCodeListeners.get(rawCode);
+
+        if (currentListeners == null) {
+            currentListeners = new ArrayList<>();
+        }
+
+        currentListeners.add(listener);
+
+        onRawCodeListeners.put(rawCode, currentListeners);
     }
 }

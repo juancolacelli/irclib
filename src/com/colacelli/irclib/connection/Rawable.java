@@ -3,7 +3,8 @@ package com.colacelli.irclib.connection;
 public interface Rawable {
     enum RawCode {
         LOGGED_IN(4),
-        NICKNAME_IN_USE(433);
+        NICKNAME_IN_USE(433),
+        JOIN_BANNED(474);
 
         private final int code;
 

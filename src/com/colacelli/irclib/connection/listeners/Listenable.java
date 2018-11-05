@@ -20,4 +20,6 @@ public interface Listenable {
     void addListener(OnPrivateMessageListener listener);
 
     void addListener(OnNickChangeListener listener);
+
+    void addListener(int rawCode, OnRawCodeListener listener);
 }
