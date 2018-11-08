@@ -297,6 +297,14 @@ public final class Connection implements Listenable {
         return user;
     }
 
+    public ArrayList<Channel> getChannels() {
+        ArrayList<Channel> channels = new ArrayList<>();
+
+        this.channels.forEach((name, channel) -> channels.add(channel));
+
+        return channels;
+    }
+
     private void addListener(String command, OnServerMessageListener listener) {
         command = command.toUpperCase();
 
