@@ -3,6 +3,7 @@ package com.colacelli.irclib.actors;
 public class User {
     private String nick;
     private String login;
+    private String realName;
     private String oldNick;
 
     public User(String nick) {
@@ -12,6 +13,7 @@ public class User {
     private User(Builder builder) {
         nick = builder.nick;
         login = builder.login;
+        realName = builder.realName;
     }
 
     public String getNick() {
@@ -31,9 +33,14 @@ public class User {
         return oldNick;
     }
 
+    public String getRealName() {
+        return realName;
+    }
+
     public static class Builder {
         private String nick;
         private String login;
+        private String realName;
 
         public Builder setNick(String nick) {
             this.nick = nick;
@@ -42,6 +49,11 @@ public class User {
 
         public Builder setLogin(String login) {
             this.login = login;
+            return this;
+        }
+
+        public Builder setRealName(String realName) {
+            this.realName = realName;
             return this;
         }
 

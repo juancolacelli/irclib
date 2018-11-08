@@ -222,7 +222,7 @@ public final class Connection implements Listenable {
     private void login(User user) throws IOException {
         nick(user.getNick());
 
-        send("USER " + user.getLogin() + " 8 * : " + user.getLogin());
+        send("USER " + user.getLogin() + " 8 * : " + user.getRealName());
 
         listen();
     }
