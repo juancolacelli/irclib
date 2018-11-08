@@ -142,7 +142,7 @@ public final class Connection implements Listenable {
             Channel channel = channels.get(args[2]);
 
             if (channel != null) {
-                User user = new User(command.substring(1, command.indexOf("!")));
+                User user = new User(message.substring(1, message.indexOf("!")));
                 onPartListeners.forEach((listener) -> listener.onPart(this, user, channel));
             }
         });
