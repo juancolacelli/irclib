@@ -5,7 +5,7 @@ import com.colacelli.irclib.actors.User;
 public class PrivateMessage extends Message {
     protected User receiver;
 
-    private PrivateMessage(Builder builder) {
+    PrivateMessage(Builder builder) {
         sender = builder.sender;
         receiver = builder.receiver;
         text = builder.text;

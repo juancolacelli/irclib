@@ -7,6 +7,7 @@ import com.colacelli.irclib.connection.connectors.Connector;
 import com.colacelli.irclib.connection.connectors.SecureConnector;
 import com.colacelli.irclib.connection.connectors.UnsecureConnector;
 import com.colacelli.irclib.connection.listeners.*;
+import com.colacelli.irclib.messages.CTCPMessage;
 import com.colacelli.irclib.messages.ChannelMessage;
 import com.colacelli.irclib.messages.PrivateMessage;
 
@@ -14,6 +15,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
+
+import static com.colacelli.irclib.connection.listeners.OnCtcpListener.CTCP_CHARACTER;
 
 public final class Connection implements Listenable {
     private Server server;
@@ -36,6 +39,7 @@ public final class Connection implements Listenable {
     private ArrayList<OnChannelMessageListener> onChannelMessageListeners;
     private ArrayList<OnPrivateMessageListener> onPrivateMessageListeners;
     private ArrayList<OnNickChangeListener> onNickChangeListeners;
+    private ArrayList<OnCtcpListener> onCtcpListeners;
 
     public Connection() {
         onRawCodeListeners = new HashMap<>();
@@ -51,6 +55,7 @@ public final class Connection implements Listenable {
         onChannelMessageListeners = new ArrayList<>();
         onPrivateMessageListeners = new ArrayList<>();
         onNickChangeListeners = new ArrayList<>();
+        onCtcpListeners = new ArrayList<>();
 
         addListener(RawCode.LOGGED_IN.getCode(), (connection, message, rawCode, args) -> {
             onConnectListeners.forEach((listener) -> listener.onConnect(this, server, user));
@@ -90,12 +95,28 @@ public final class Connection implements Listenable {
 
                     onChannelMessageListeners.forEach((listener) -> listener.onChannelMessage(this, channelMessageBuilder.build()));
                 } else {
-                    PrivateMessage.Builder privateMessageBuilder = new PrivateMessage.Builder();
-                    privateMessageBuilder
-                            .setSender(userBuilder.build())
-                            .setReceiver(user)
-                            .setText(text);
-                    onPrivateMessageListeners.forEach((listener) -> listener.onPrivateMessage(this, privateMessageBuilder.build()));
+                    if (text.startsWith(CTCP_CHARACTER) && text.endsWith(CTCP_CHARACTER)) {
+                        String ctcp = text.substring(1, text.length() - 1);
+
+                        CTCPMessage.Builder ctcpMessageBuilder = new CTCPMessage.Builder();
+                        ctcpMessageBuilder
+                                .setSender(userBuilder.build())
+                                .setReceiver(user);
+
+                        ctcpMessageBuilder.setCommand(ctcp);
+
+                        onCtcpListeners.forEach(onCtcpListener -> {
+                            onCtcpListener.onCtcp(this, ctcpMessageBuilder.build(), args);
+                        });
+                    } else {
+                        PrivateMessage.Builder privateMessageBuilder = new PrivateMessage.Builder();
+                        privateMessageBuilder
+                                .setSender(userBuilder.build())
+                                .setReceiver(user)
+                                .setText(text);
+
+                        onPrivateMessageListeners.forEach((listener) -> listener.onPrivateMessage(this, privateMessageBuilder.build()));
+                    }
                 }
             }
         });
@@ -190,6 +211,7 @@ public final class Connection implements Listenable {
             System.out.println(line);
 
             String[] splittedLine = line.split(" ");
+
             try {
                 // Raw code
                 int rawCode = Integer.parseInt(splittedLine[1]);
@@ -248,6 +270,12 @@ public final class Connection implements Listenable {
         send("PRIVMSG " + privateMessage.getReceiver().getNick() + " :" + privateMessage.getText());
 
         privateMessage.setSender(user);
+    }
+
+    public void send(CTCPMessage ctcpMessage) {
+        send("NOTICE " + ctcpMessage.getReceiver().getNick() + " :" + ctcpMessage.getCTCPText());
+
+        ctcpMessage.setSender(user);
     }
 
     public void mode(String mode) {
@@ -367,6 +395,11 @@ public final class Connection implements Listenable {
     @Override
     public void addListener(OnNickChangeListener listener) {
         onNickChangeListeners.add(listener);
+    }
+
+    @Override
+    public void addListener(OnCtcpListener listener) {
+        onCtcpListeners.add(listener);
     }
 
     @Override

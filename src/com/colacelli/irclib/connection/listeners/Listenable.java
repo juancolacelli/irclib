@@ -21,5 +21,7 @@ public interface Listenable {
 
     void addListener(OnNickChangeListener listener);
 
+    void addListener(OnCtcpListener listener);
+
     void addListener(int rawCode, OnRawCodeListener listener);
 }
