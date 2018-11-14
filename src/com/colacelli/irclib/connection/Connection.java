@@ -7,6 +7,7 @@ import com.colacelli.irclib.connection.connectors.Connector;
 import com.colacelli.irclib.connection.connectors.SecureConnector;
 import com.colacelli.irclib.connection.connectors.UnsecureConnector;
 import com.colacelli.irclib.connection.listeners.*;
+import com.colacelli.irclib.messages.PrivateNoticeMessage;
 import com.colacelli.irclib.messages.CTCPMessage;
 import com.colacelli.irclib.messages.ChannelMessage;
 import com.colacelli.irclib.messages.PrivateMessage;
@@ -38,6 +39,7 @@ public final class Connection implements Listenable {
     private ArrayList<OnChannelModeListener> onChannelModeListeners;
     private ArrayList<OnChannelMessageListener> onChannelMessageListeners;
     private ArrayList<OnPrivateMessageListener> onPrivateMessageListeners;
+    private ArrayList<OnPrivateNoticeMessageListener> onPrivateNoticeMessageListeners;
     private ArrayList<OnNickChangeListener> onNickChangeListeners;
     private ArrayList<OnCtcpListener> onCtcpListeners;
 
@@ -54,6 +56,7 @@ public final class Connection implements Listenable {
         onChannelModeListeners = new ArrayList<>();
         onChannelMessageListeners = new ArrayList<>();
         onPrivateMessageListeners = new ArrayList<>();
+        onPrivateNoticeMessageListeners = new ArrayList<>();
         onNickChangeListeners = new ArrayList<>();
         onCtcpListeners = new ArrayList<>();
 
@@ -272,6 +275,12 @@ public final class Connection implements Listenable {
         privateMessage.setSender(user);
     }
 
+    public void send(PrivateNoticeMessage privateNoticeMessage) {
+        send("NOTICE " + privateNoticeMessage.getReceiver().getNick() + " :" + privateNoticeMessage.getText());
+
+        privateNoticeMessage.setSender(user);
+    }
+
     public void send(CTCPMessage ctcpMessage) {
         send("NOTICE " + ctcpMessage.getReceiver().getNick() + " :" + ctcpMessage.getCTCPText());
 
@@ -390,6 +399,11 @@ public final class Connection implements Listenable {
     @Override
     public void addListener(OnPrivateMessageListener listener) {
         onPrivateMessageListeners.add(listener);
+    }
+
+    @Override
+    public void addListener(OnPrivateNoticeMessageListener listener) {
+       onPrivateNoticeMessageListeners.add(listener);
     }
 
     @Override

@@ -19,6 +19,8 @@ public interface Listenable {
 
     void addListener(OnPrivateMessageListener listener);
 
+    void addListener(OnPrivateNoticeMessageListener listener);
+
     void addListener(OnNickChangeListener listener);
 
     void addListener(OnCtcpListener listener);
