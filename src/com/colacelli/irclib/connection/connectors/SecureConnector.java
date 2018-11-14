@@ -58,7 +58,8 @@ public class SecureConnector extends Connector {
 
     @Override
     public void send(String text) throws IOException {
-        writer.writeBytes(text + ENTER);
+        writer.write(text.getBytes());
+        writer.writeBytes(ENTER);
         writer.flush();
     }
 }
