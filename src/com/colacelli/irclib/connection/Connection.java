@@ -7,10 +7,10 @@ import com.colacelli.irclib.connection.connectors.Connector;
 import com.colacelli.irclib.connection.connectors.SecureConnector;
 import com.colacelli.irclib.connection.connectors.UnsecureConnector;
 import com.colacelli.irclib.connection.listeners.*;
-import com.colacelli.irclib.messages.PrivateNoticeMessage;
 import com.colacelli.irclib.messages.CTCPMessage;
 import com.colacelli.irclib.messages.ChannelMessage;
 import com.colacelli.irclib.messages.PrivateMessage;
+import com.colacelli.irclib.messages.PrivateNoticeMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -403,7 +403,7 @@ public final class Connection implements Listenable {
 
     @Override
     public void addListener(OnPrivateNoticeMessageListener listener) {
-       onPrivateNoticeMessageListeners.add(listener);
+        onPrivateNoticeMessageListeners.add(listener);
     }
 
     @Override
