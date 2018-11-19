@@ -227,7 +227,7 @@ public final class Connection extends ConnectionListener {
         listen();
     }
 
-    private void send(String message) {
+    public void send(String message) {
         System.out.println(message);
 
         try {
