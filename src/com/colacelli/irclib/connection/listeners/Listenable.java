@@ -26,4 +26,30 @@ public interface Listenable {
     void addListener(OnCtcpListener listener);
 
     void addListener(int rawCode, OnRawCodeListener listener);
+
+    void removeListener(OnConnectListener listener);
+
+    void removeListener(OnDisconnectListener listener);
+
+    void removeListener(OnPingListener listener);
+
+    void removeListener(OnJoinListener listener);
+
+    void removeListener(OnPartListener listener);
+
+    void removeListener(OnKickListener listener);
+
+    void removeListener(OnChannelModeListener listener);
+
+    void removeListener(OnChannelMessageListener listener);
+
+    void removeListener(OnPrivateMessageListener listener);
+
+    void removeListener(OnPrivateNoticeMessageListener listener);
+
+    void removeListener(OnNickChangeListener listener);
+
+    void removeListener(OnCtcpListener listener);
+
+    void removeListener(int rawCode, OnRawCodeListener listener);
 }

@@ -6,7 +6,8 @@ import com.colacelli.irclib.connection.Rawable.RawCode;
 import com.colacelli.irclib.connection.connectors.Connector;
 import com.colacelli.irclib.connection.connectors.SecureConnector;
 import com.colacelli.irclib.connection.connectors.UnsecureConnector;
-import com.colacelli.irclib.connection.listeners.*;
+import com.colacelli.irclib.connection.listeners.OnRawCodeListener;
+import com.colacelli.irclib.connection.listeners.OnServerMessageListener;
 import com.colacelli.irclib.messages.CTCPMessage;
 import com.colacelli.irclib.messages.ChannelMessage;
 import com.colacelli.irclib.messages.PrivateMessage;
@@ -19,7 +20,7 @@ import java.util.Random;
 
 import static com.colacelli.irclib.connection.listeners.OnCtcpListener.CTCP_CHARACTER;
 
-public final class Connection implements Listenable {
+public final class Connection extends ConnectionListener {
     private Server server;
 
     private User user;
@@ -27,38 +28,8 @@ public final class Connection implements Listenable {
 
     private Connector connector;
 
-    private HashMap<Integer, ArrayList<OnRawCodeListener>> onRawCodeListeners;
-    private HashMap<String, ArrayList<OnServerMessageListener>> onServerMessageListeners;
-
-    private ArrayList<OnConnectListener> onConnectListeners;
-    private ArrayList<OnDisconnectListener> onDisconnectListeners;
-    private ArrayList<OnPingListener> onPingListeners;
-    private ArrayList<OnJoinListener> onJoinListeners;
-    private ArrayList<OnPartListener> onPartListeners;
-    private ArrayList<OnKickListener> onKickListeners;
-    private ArrayList<OnChannelModeListener> onChannelModeListeners;
-    private ArrayList<OnChannelMessageListener> onChannelMessageListeners;
-    private ArrayList<OnPrivateMessageListener> onPrivateMessageListeners;
-    private ArrayList<OnPrivateNoticeMessageListener> onPrivateNoticeMessageListeners;
-    private ArrayList<OnNickChangeListener> onNickChangeListeners;
-    private ArrayList<OnCtcpListener> onCtcpListeners;
-
     public Connection() {
-        onRawCodeListeners = new HashMap<>();
-        onServerMessageListeners = new HashMap<>();
-
-        onConnectListeners = new ArrayList<>();
-        onDisconnectListeners = new ArrayList<>();
-        onPingListeners = new ArrayList<>();
-        onJoinListeners = new ArrayList<>();
-        onPartListeners = new ArrayList<>();
-        onKickListeners = new ArrayList<>();
-        onChannelModeListeners = new ArrayList<>();
-        onChannelMessageListeners = new ArrayList<>();
-        onPrivateMessageListeners = new ArrayList<>();
-        onPrivateNoticeMessageListeners = new ArrayList<>();
-        onNickChangeListeners = new ArrayList<>();
-        onCtcpListeners = new ArrayList<>();
+        super();
 
         addListener(RawCode.LOGGED_IN.getCode(), (connection, message, rawCode, args) -> {
             onConnectListeners.forEach((listener) -> listener.onConnect(this, server, user));
@@ -220,9 +191,13 @@ public final class Connection implements Listenable {
                 int rawCode = Integer.parseInt(splittedLine[1]);
 
                 ArrayList<OnRawCodeListener> rawCodeListeners = onRawCodeListeners.get(rawCode);
-                if (rawCodeListeners != null) for (OnRawCodeListener onRawCodeListener : rawCodeListeners) {
-                    onRawCodeListener.onRawCode(this, line, rawCode, splittedLine);
+                if (rawCodeListeners != null) {
+                    for (int i = 0; i < rawCodeListeners.size(); i++) {
+                        OnRawCodeListener rawCodeListener = rawCodeListeners.get(i);
+                        rawCodeListener.onRawCode(this, line, rawCode, splittedLine);
+                    }
                 }
+
             } catch (NumberFormatException e) {
                 // Not a Raw code
                 String command = splittedLine[1].toUpperCase();
@@ -295,6 +270,10 @@ public final class Connection implements Listenable {
         send("MODE " + channel.getName() + " " + mode);
     }
 
+    public void whois(User user) {
+        send("WHOIS " + user.getNick());
+    }
+
     public void topic(Channel channel, String topic) {
         send("TOPIC " + channel.getName() + " " + topic);
     }
@@ -354,78 +333,5 @@ public final class Connection implements Listenable {
         currentListeners.add(listener);
 
         onServerMessageListeners.put(command, currentListeners);
-    }
-
-    @Override
-    public void addListener(OnConnectListener listener) {
-        onConnectListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnDisconnectListener listener) {
-        onDisconnectListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnPingListener listener) {
-        onPingListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnJoinListener listener) {
-        onJoinListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnPartListener listener) {
-        onPartListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnKickListener listener) {
-        onKickListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnChannelModeListener listener) {
-        onChannelModeListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnChannelMessageListener listener) {
-        onChannelMessageListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnPrivateMessageListener listener) {
-        onPrivateMessageListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnPrivateNoticeMessageListener listener) {
-        onPrivateNoticeMessageListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnNickChangeListener listener) {
-        onNickChangeListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(OnCtcpListener listener) {
-        onCtcpListeners.add(listener);
-    }
-
-    @Override
-    public void addListener(int rawCode, OnRawCodeListener listener) {
-        ArrayList<OnRawCodeListener> currentListeners = onRawCodeListeners.get(rawCode);
-
-        if (currentListeners == null) {
-            currentListeners = new ArrayList<>();
-        }
-
-        currentListeners.add(listener);
-
-        onRawCodeListeners.put(rawCode, currentListeners);
     }
 }
