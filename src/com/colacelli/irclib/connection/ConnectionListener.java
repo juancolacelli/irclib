@@ -8,6 +8,7 @@ import java.util.HashMap;
 public class ConnectionListener implements Listenable {
     protected ArrayList<OnChannelMessageListener> onChannelMessageListeners;
     protected ArrayList<OnChannelModeListener> onChannelModeListeners;
+    protected ArrayList<OnChannelNoticeMessageListener> onChannelNoticeMessageListeners;
     protected ArrayList<OnConnectListener> onConnectListeners;
     protected ArrayList<OnCtcpListener> onCtcpListeners;
     protected ArrayList<OnDisconnectListener> onDisconnectListeners;
@@ -24,6 +25,7 @@ public class ConnectionListener implements Listenable {
     public ConnectionListener() {
         onChannelMessageListeners = new ArrayList<>();
         onChannelModeListeners = new ArrayList<>();
+        onChannelNoticeMessageListeners = new ArrayList<>();
         onConnectListeners = new ArrayList<>();
         onCtcpListeners = new ArrayList<>();
         onDisconnectListeners = new ArrayList<>();
@@ -81,6 +83,11 @@ public class ConnectionListener implements Listenable {
     @Override
     public void addListener(OnPrivateMessageListener listener) {
         onPrivateMessageListeners.add(listener);
+    }
+
+    @Override
+    public void addListener(OnChannelNoticeMessageListener listener) {
+        onChannelNoticeMessageListeners.add(listener);
     }
 
     @Override
@@ -149,6 +156,11 @@ public class ConnectionListener implements Listenable {
     @Override
     public void removeListener(OnPrivateMessageListener listener) {
         onPrivateMessageListeners.remove(listener);
+    }
+
+    @Override
+    public void removeListener(OnChannelNoticeMessageListener listener) {
+        onChannelNoticeMessageListeners.remove(listener);
     }
 
     @Override

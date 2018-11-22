@@ -19,6 +19,8 @@ public interface Listenable {
 
     void addListener(OnPrivateMessageListener listener);
 
+    void addListener(OnChannelNoticeMessageListener listener);
+
     void addListener(OnPrivateNoticeMessageListener listener);
 
     void addListener(OnNickChangeListener listener);
@@ -44,6 +46,8 @@ public interface Listenable {
     void removeListener(OnChannelMessageListener listener);
 
     void removeListener(OnPrivateMessageListener listener);
+
+    void removeListener(OnChannelNoticeMessageListener listener);
 
     void removeListener(OnPrivateNoticeMessageListener listener);
 

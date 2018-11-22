@@ -8,10 +8,7 @@ import com.colacelli.irclib.connection.connectors.SecureConnector;
 import com.colacelli.irclib.connection.connectors.UnsecureConnector;
 import com.colacelli.irclib.connection.listeners.OnRawCodeListener;
 import com.colacelli.irclib.connection.listeners.OnServerMessageListener;
-import com.colacelli.irclib.messages.CTCPMessage;
-import com.colacelli.irclib.messages.ChannelMessage;
-import com.colacelli.irclib.messages.PrivateMessage;
-import com.colacelli.irclib.messages.PrivateNoticeMessage;
+import com.colacelli.irclib.messages.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -143,24 +140,24 @@ public final class Connection extends ConnectionListener {
         });
     }
 
-    public void connect(Server newServer, User newUser) {
+    public void connect(Server server, User user) {
         try {
-            user = newUser;
-            server = newServer;
+            this.user = user;
+            this.server = server;
 
-            if (server.isSecure()) {
+            if (this.server.isSecure()) {
                 connector = new SecureConnector();
             } else {
                 connector = new UnsecureConnector();
             }
 
-            connector.connect(server, user);
+            connector.connect(this.server, this.user);
 
-            if (!server.getPassword().equals("")) {
-                send("PASS " + server.getPassword());
+            if (!this.server.getPassword().equals("")) {
+                send("PASS " + this.server.getPassword());
             }
 
-            login(user);
+            login(this.user);
         } catch (Exception e) {
             e.printStackTrace();
             reconnect();
@@ -238,28 +235,34 @@ public final class Connection extends ConnectionListener {
         }
     }
 
-    public void send(ChannelMessage channelMessage) {
-        send("PRIVMSG " + channelMessage.getChannel().getName() + " :" + channelMessage.getText());
+    public void send(ChannelMessage message) {
+        send("PRIVMSG " + message.getChannel().getName() + " :" + message.getText());
 
-        channelMessage.setSender(user);
+        message.setSender(user);
     }
 
-    public void send(PrivateMessage privateMessage) {
-        send("PRIVMSG " + privateMessage.getReceiver().getNick() + " :" + privateMessage.getText());
+    public void send(PrivateMessage message) {
+        send("PRIVMSG " + message.getReceiver().getNick() + " :" + message.getText());
 
-        privateMessage.setSender(user);
+        message.setSender(user);
     }
 
-    public void send(PrivateNoticeMessage privateNoticeMessage) {
-        send("NOTICE " + privateNoticeMessage.getReceiver().getNick() + " :" + privateNoticeMessage.getText());
+    public void send(ChannelNoticeMessage message) {
+        send("NOTICE " + message.getChannel().getName() + " :" + message.getText());
 
-        privateNoticeMessage.setSender(user);
+        message.setSender(user);
     }
 
-    public void send(CTCPMessage ctcpMessage) {
-        send("NOTICE " + ctcpMessage.getReceiver().getNick() + " :" + ctcpMessage.getCTCPText());
+    public void send(PrivateNoticeMessage message) {
+        send("NOTICE " + message.getReceiver().getNick() + " :" + message.getText());
 
-        ctcpMessage.setSender(user);
+        message.setSender(user);
+    }
+
+    public void send(CTCPMessage message) {
+        send("NOTICE " + message.getReceiver().getNick() + " :" + message.getCTCPText());
+
+        message.setSender(user);
     }
 
     public void mode(String mode) {
