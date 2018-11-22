@@ -11,7 +11,7 @@ import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 
 public class SecureConnector extends Connector {
-    final TrustManager[] trustAllCerts = new TrustManager[]{
+    private final TrustManager[] trustAllCerts = new TrustManager[]{
             new X509TrustManager() {
                 public X509Certificate[] getAcceptedIssuers() {
                     return new X509Certificate[0];
@@ -53,6 +53,7 @@ public class SecureConnector extends Connector {
 
     @Override
     public String listen() throws IOException {
+        // FIXME: readLine() is deprecated
         return reader.readLine();
     }
 

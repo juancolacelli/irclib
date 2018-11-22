@@ -28,21 +28,17 @@ public final class Connection extends ConnectionListener {
     public Connection() {
         super();
 
-        addListener(RawCode.LOGGED_IN.getCode(), (connection, message, rawCode, args) -> {
-            onConnectListeners.forEach((listener) -> listener.onConnect(this, server, user));
-        });
+        addListener(RawCode.LOGGED_IN.getCode(), (connection, message, rawCode, args) -> onConnectListeners.forEach((listener) -> listener.onConnect(this, server, user)));
 
-        addListener(RawCode.NICKNAME_IN_USE.getCode(), (connection, message, rawCode, args) -> {
-            nick(user.getNick() + (new Random()).nextInt(9));
-        });
+        addListener(RawCode.NICKNAME_IN_USE.getCode(), (connection, message, rawCode, args) -> nick(user.getNick() + (new Random()).nextInt(9)));
 
-        addListener("ping", (connection, message, command, args) -> {
+        addListener("PING", (connection, message, command, args) -> {
             send("PONG " + message.substring(5));
 
             onPingListeners.forEach((listener) -> listener.onPing(this));
         });
 
-        addListener("privmsg", (connection, message, command, args) -> {
+        addListener("PRIVMSG", (connection, message, command, args) -> {
             int nickIndex = message.indexOf("!");
             int messageIndex = message.indexOf(":", 1);
 
@@ -76,9 +72,7 @@ public final class Connection extends ConnectionListener {
 
                         ctcpMessageBuilder.setCommand(ctcp);
 
-                        onCtcpListeners.forEach(onCtcpListener -> {
-                            onCtcpListener.onCtcp(this, ctcpMessageBuilder.build(), args);
-                        });
+                        onCtcpListeners.forEach(onCtcpListener -> onCtcpListener.onCtcp(this, ctcpMessageBuilder.build(), args));
                     } else {
                         PrivateMessage.Builder privateMessageBuilder = new PrivateMessage.Builder();
                         privateMessageBuilder
@@ -92,7 +86,7 @@ public final class Connection extends ConnectionListener {
             }
         });
 
-        addListener("join", (connection, message, command, args) -> {
+        addListener("JOIN", (connection, message, command, args) -> {
             Channel channel = channels.get(args[2].substring(1));
 
             if (channel != null) {
@@ -101,7 +95,7 @@ public final class Connection extends ConnectionListener {
             }
         });
 
-        addListener("kick", (connection, message, command, args) -> {
+        addListener("KICK", (connection, message, command, args) -> {
             Channel channel = channels.get(args[2]);
 
             if (channel != null) {
@@ -110,7 +104,7 @@ public final class Connection extends ConnectionListener {
             }
         });
 
-        addListener("mode", (connection, message, command, args) -> {
+        addListener("MODE", (connection, message, command, args) -> {
             Channel channel = channels.get(args[2]);
 
             if (channel != null) {
@@ -118,7 +112,7 @@ public final class Connection extends ConnectionListener {
             }
         });
 
-        addListener("nick", (connection, message, command, args) -> {
+        addListener("NICK", (connection, message, command, args) -> {
             String oldNick = message.substring(1, message.indexOf("!"));
 
             User.Builder userBuilder = new User.Builder();
@@ -130,7 +124,7 @@ public final class Connection extends ConnectionListener {
             onNickChangeListeners.forEach((listener) -> listener.onNickChange(this, nickUser));
         });
 
-        addListener("part", (connection, message, command, args) -> {
+        addListener("PART", (connection, message, command, args) -> {
             Channel channel = channels.get(args[2]);
 
             if (channel != null) {
@@ -189,6 +183,7 @@ public final class Connection extends ConnectionListener {
 
                 ArrayList<OnRawCodeListener> rawCodeListeners = onRawCodeListeners.get(rawCode);
                 if (rawCodeListeners != null) {
+                    // Must use for instead of foreach to avoid ConcurrentModificationException
                     for (int i = 0; i < rawCodeListeners.size(); i++) {
                         OnRawCodeListener rawCodeListener = rawCodeListeners.get(i);
                         rawCodeListener.onRawCode(this, line, rawCode, splittedLine);

@@ -1,7 +1,7 @@
 package com.colacelli.irclib.messages;
 
 public class ChannelNoticeMessage extends ChannelMessage {
-    public ChannelNoticeMessage(Builder builder) {
+    private ChannelNoticeMessage(Builder builder) {
         super(builder);
     }
 

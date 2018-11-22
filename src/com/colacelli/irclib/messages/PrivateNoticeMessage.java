@@ -1,7 +1,7 @@
 package com.colacelli.irclib.messages;
 
 public class PrivateNoticeMessage extends PrivateMessage {
-    PrivateNoticeMessage(Builder builder) {
+    private PrivateNoticeMessage(Builder builder) {
         super(builder);
     }
 

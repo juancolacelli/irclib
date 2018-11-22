@@ -6,7 +6,7 @@ import com.colacelli.irclib.actors.User;
 public class ChannelMessage extends Message {
     protected Channel channel;
 
-    public ChannelMessage(Builder builder) {
+    protected ChannelMessage(Builder builder) {
         sender = builder.sender;
         channel = builder.channel;
         text = builder.text;
