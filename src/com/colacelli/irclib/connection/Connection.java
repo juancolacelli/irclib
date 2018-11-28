@@ -53,18 +53,18 @@ public final class Connection extends ConnectionListener {
         });
 
         addListener(new OnServerMessageListener() {
-                @Override
-                public String serverMessage() {
-                    return "PING";
-                }
+                        @Override
+                        public String serverMessage() {
+                            return "PING";
+                        }
 
-                @Override
-                public void onServerMessage(Connection connection, String message, String command, String... args) {
-                    send("PONG " + message.substring(5));
-                    getListeners(OnPingListener.TYPE).forEach(
-                            (listener -> ((OnPingListener) listener).onPing(connection)));
-                }
-            }
+                        @Override
+                        public void onServerMessage(Connection connection, String message, String command, String... args) {
+                            send("PONG " + message.substring(5));
+                            getListeners(OnPingListener.TYPE).forEach(
+                                    (listener -> ((OnPingListener) listener).onPing(connection)));
+                        }
+                    }
         );
 
         addListener(new OnServerMessageListener() {
@@ -214,7 +214,7 @@ public final class Connection extends ConnectionListener {
                     User user = new User(message.substring(1, message.indexOf("!")));
 
                     getListeners(OnPartListener.TYPE).forEach(
-                            (listener -> ((OnPartListener) listener).onPart(connection, user,channel)));
+                            (listener -> ((OnPartListener) listener).onPart(connection, user, channel)));
                 }
             }
         });
@@ -270,18 +270,20 @@ public final class Connection extends ConnectionListener {
 
                 ArrayList<? extends Listener> rawCodeListeners = getListeners(OnRawCodeListener.TYPE);
                 // Must use for instead of foreach to avoid ConcurrentModificationException
-                for(int i = 0; i < rawCodeListeners.size(); i++) {
+                for (int i = 0; i < rawCodeListeners.size(); i++) {
                     OnRawCodeListener rawCodeListener = (OnRawCodeListener) rawCodeListeners.get(i);
-                    if (rawCodeListener.rawCode() == rawCode) rawCodeListener.onRawCode(this, line, rawCode, splittedLine);
+                    if (rawCodeListener.rawCode() == rawCode)
+                        rawCodeListener.onRawCode(this, line, rawCode, splittedLine);
                 }
             } catch (NumberFormatException e) {
-                for(Listener listener : getListeners(OnServerMessageListener.TYPE)) {
+                for (Listener listener : getListeners(OnServerMessageListener.TYPE)) {
                     OnServerMessageListener serverMessageListener = (OnServerMessageListener) listener;
 
                     // Commands usually are in position 0, but PING is on position 1
                     for (int i = 0; i <= 1; i++) {
                         String command = splittedLine[i].toUpperCase();
-                        if (command.equals(serverMessageListener.serverMessage())) serverMessageListener.onServerMessage(this, line, command, splittedLine);
+                        if (command.equals(serverMessageListener.serverMessage()))
+                            serverMessageListener.onServerMessage(this, line, command, splittedLine);
                     }
                 }
             }

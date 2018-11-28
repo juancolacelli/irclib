@@ -6,6 +6,7 @@ public interface OnRawCodeListener extends Listener {
     Type TYPE = Type.RAW_CODE;
 
     int rawCode();
+
     void onRawCode(Connection connection, String message, int rawCode, String... args);
 
     @Override

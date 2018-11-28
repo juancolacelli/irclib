@@ -1,10 +1,10 @@
 package com.colacelli.irclib.connection;
 
-import com.colacelli.irclib.connection.listeners.*;
+import com.colacelli.irclib.connection.listeners.Listenable;
+import com.colacelli.irclib.connection.listeners.Listener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class ConnectionListener implements Listenable {
     private HashMap<Listener.Type, ArrayList<Listener>> listeners;

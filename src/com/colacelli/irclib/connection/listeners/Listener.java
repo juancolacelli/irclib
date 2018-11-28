@@ -1,6 +1,10 @@
 package com.colacelli.irclib.connection.listeners;
 
 public interface Listener {
+    Type TYPE = Type.LISTENER;
+
+    Type getType();
+
     enum Type {
         LISTENER,
         CHANNEL_MESSAGE,
@@ -19,8 +23,4 @@ public interface Listener {
         RAW_CODE,
         SERVER_MESSAGE
     }
-
-    Type TYPE = Type.LISTENER;
-
-    Type getType();
 }
