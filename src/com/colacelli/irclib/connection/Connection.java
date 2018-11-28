@@ -6,8 +6,7 @@ import com.colacelli.irclib.connection.Rawable.RawCode;
 import com.colacelli.irclib.connection.connectors.Connector;
 import com.colacelli.irclib.connection.connectors.SecureConnector;
 import com.colacelli.irclib.connection.connectors.UnsecureConnector;
-import com.colacelli.irclib.connection.listeners.OnRawCodeListener;
-import com.colacelli.irclib.connection.listeners.OnServerMessageListener;
+import com.colacelli.irclib.connection.listeners.*;
 import com.colacelli.irclib.messages.*;
 
 import java.io.IOException;
@@ -28,108 +27,195 @@ public final class Connection extends ConnectionListener {
     public Connection() {
         super();
 
-        addListener(RawCode.LOGGED_IN.getCode(), (connection, message, rawCode, args) -> onConnectListeners.forEach((listener) -> listener.onConnect(this, server, user)));
+        addListener(new OnRawCodeListener() {
+            @Override
+            public int rawCode() {
+                return RawCode.LOGGED_IN.getCode();
+            }
 
-        addListener(RawCode.NICKNAME_IN_USE.getCode(), (connection, message, rawCode, args) -> nick(user.getNick() + (new Random()).nextInt(9)));
-
-        addListener("PING", (connection, message, command, args) -> {
-            send("PONG " + message.substring(5));
-
-            onPingListeners.forEach((listener) -> listener.onPing(this));
+            @Override
+            public void onRawCode(Connection connection, String message, int rawCode, String... args) {
+                getListeners(OnConnectListener.TYPE).forEach(
+                        (listener -> ((OnConnectListener) listener).onConnect(connection, server, user)));
+            }
         });
 
-        addListener("PRIVMSG", (connection, message, command, args) -> {
-            int nickIndex = message.indexOf("!");
-            int messageIndex = message.indexOf(":", 1);
+        addListener(new OnRawCodeListener() {
+            @Override
+            public int rawCode() {
+                return RawCode.NICKNAME_IN_USE.getCode();
+            }
 
-            if (nickIndex != -1 && messageIndex != -1) {
-                String nick = message.substring(1, nickIndex);
-                String login = message.substring(nickIndex + 1, message.indexOf("@"));
-                String text = message.substring(messageIndex + 1);
+            @Override
+            public void onRawCode(Connection connection, String message, int rawCode, String... args) {
+                nick(user.getNick() + (new Random()).nextInt(9));
+            }
+        });
 
-                User.Builder userBuilder = new User.Builder();
-                userBuilder
-                        .setNick(nick)
-                        .setLogin(login);
+        addListener(new OnServerMessageListener() {
+                @Override
+                public String serverMessage() {
+                    return "PING";
+                }
 
-                Channel channel = channels.get(args[2]);
-                if (channel != null) {
-                    ChannelMessage.Builder channelMessageBuilder = new ChannelMessage.Builder();
-                    channelMessageBuilder
-                            .setSender(userBuilder.build())
-                            .setChannel(channel)
-                            .setText(text);
+                @Override
+                public void onServerMessage(Connection connection, String message, String command, String... args) {
+                    send("PONG " + message.substring(5));
+                    getListeners(OnPingListener.TYPE).forEach(
+                            (listener -> ((OnPingListener) listener).onPing(connection)));
+                }
+            }
+        );
 
-                    onChannelMessageListeners.forEach((listener) -> listener.onChannelMessage(this, channelMessageBuilder.build()));
-                } else {
-                    if (text.startsWith(CTCP_CHARACTER) && text.endsWith(CTCP_CHARACTER)) {
-                        String ctcp = text.substring(1, text.length() - 1);
+        addListener(new OnServerMessageListener() {
+            @Override
+            public String serverMessage() {
+                return "PRIVMSG";
+            }
 
-                        CTCPMessage.Builder ctcpMessageBuilder = new CTCPMessage.Builder();
-                        ctcpMessageBuilder
+            @Override
+            public void onServerMessage(Connection connection, String message, String command, String... args) {
+                int nickIndex = message.indexOf("!");
+                int messageIndex = message.indexOf(":", 1);
+
+                if (nickIndex != -1 && messageIndex != -1) {
+                    String nick = message.substring(1, nickIndex);
+                    String login = message.substring(nickIndex + 1, message.indexOf("@"));
+                    String text = message.substring(messageIndex + 1);
+
+                    User.Builder userBuilder = new User.Builder();
+                    userBuilder
+                            .setNick(nick)
+                            .setLogin(login);
+
+                    Channel channel = channels.get(args[2]);
+                    if (channel != null) {
+                        ChannelMessage.Builder channelMessageBuilder = new ChannelMessage.Builder();
+                        channelMessageBuilder
                                 .setSender(userBuilder.build())
-                                .setReceiver(user);
-
-                        ctcpMessageBuilder.setCommand(ctcp);
-
-                        onCtcpListeners.forEach(onCtcpListener -> onCtcpListener.onCtcp(this, ctcpMessageBuilder.build(), args));
-                    } else {
-                        PrivateMessage.Builder privateMessageBuilder = new PrivateMessage.Builder();
-                        privateMessageBuilder
-                                .setSender(userBuilder.build())
-                                .setReceiver(user)
+                                .setChannel(channel)
                                 .setText(text);
 
-                        onPrivateMessageListeners.forEach((listener) -> listener.onPrivateMessage(this, privateMessageBuilder.build()));
+                        getListeners(OnChannelMessageListener.TYPE).forEach(
+                                (listener -> ((OnChannelMessageListener) listener).onChannelMessage(connection, channelMessageBuilder.build())));
+                    } else {
+                        if (text.startsWith(CTCP_CHARACTER) && text.endsWith(CTCP_CHARACTER)) {
+                            String ctcp = text.substring(1, text.length() - 1);
+
+                            CTCPMessage.Builder ctcpMessageBuilder = new CTCPMessage.Builder();
+                            ctcpMessageBuilder
+                                    .setSender(userBuilder.build())
+                                    .setReceiver(user);
+
+                            ctcpMessageBuilder.setCommand(ctcp);
+
+                            getListeners(OnCtcpListener.TYPE).forEach(
+                                    (listener -> ((OnCtcpListener) listener).onCtcp(connection, ctcpMessageBuilder.build(), args)));
+                        } else {
+                            PrivateMessage.Builder privateMessageBuilder = new PrivateMessage.Builder();
+                            privateMessageBuilder
+                                    .setSender(userBuilder.build())
+                                    .setReceiver(user)
+                                    .setText(text);
+
+                            getListeners(OnPrivateMessageListener.TYPE).forEach(
+                                    (listener -> ((OnPrivateMessageListener) listener).onPrivateMessage(connection, privateMessageBuilder.build())));
+                        }
                     }
                 }
             }
         });
 
-        addListener("JOIN", (connection, message, command, args) -> {
-            Channel channel = channels.get(args[2].substring(1));
+        addListener(new OnServerMessageListener() {
+            @Override
+            public String serverMessage() {
+                return "JOIN";
+            }
 
-            if (channel != null) {
-                User user = new User(message.substring(1, message.indexOf("!")));
-                onJoinListeners.forEach((listener) -> listener.onJoin(this, user, channel));
+            @Override
+            public void onServerMessage(Connection connection, String message, String command, String... args) {
+                Channel channel = channels.get(args[2].substring(1));
+
+                if (channel != null) {
+                    User user = new User(message.substring(1, message.indexOf("!")));
+                    getListeners(OnJoinListener.TYPE).forEach(
+                            (listener -> ((OnJoinListener) listener).onJoin(connection, user, channel)));
+                }
             }
         });
 
-        addListener("KICK", (connection, message, command, args) -> {
-            Channel channel = channels.get(args[2]);
+        addListener(new OnServerMessageListener() {
+            @Override
+            public String serverMessage() {
+                return "KICK";
+            }
 
-            if (channel != null) {
-                User user = new User(args[3]);
-                onKickListeners.forEach((listener) -> listener.onKick(this, user, channel));
+            @Override
+            public void onServerMessage(Connection connection, String message, String command, String... args) {
+                Channel channel = channels.get(args[2]);
+
+                if (channel != null) {
+                    User user = new User(args[3]);
+                    getListeners(OnKickListener.TYPE).forEach(
+                            (listener -> ((OnKickListener) listener).onKick(connection, user, channel)));
+                }
             }
         });
 
-        addListener("MODE", (connection, message, command, args) -> {
-            Channel channel = channels.get(args[2]);
+        addListener(new OnServerMessageListener() {
+            @Override
+            public String serverMessage() {
+                return "MODE";
+            }
 
-            if (channel != null) {
-                onChannelModeListeners.forEach((listener) -> listener.onChannelMode(this, channel, args[3]));
+            @Override
+            public void onServerMessage(Connection connection, String message, String command, String... args) {
+                Channel channel = channels.get(args[2]);
+
+                if (channel != null) {
+                    getListeners(OnChannelModeListener.TYPE).forEach(
+                            (listener -> ((OnChannelModeListener) listener).onChannelMode(connection, channel, args[3])));
+                }
             }
         });
 
-        addListener("NICK", (connection, message, command, args) -> {
-            String oldNick = message.substring(1, message.indexOf("!"));
+        addListener(new OnServerMessageListener() {
+            @Override
+            public String serverMessage() {
+                return "NICK";
+            }
 
-            User.Builder userBuilder = new User.Builder();
-            userBuilder.setNick(oldNick);
+            @Override
+            public void onServerMessage(Connection connection, String message, String command, String... args) {
+                String oldNick = message.substring(1, message.indexOf("!"));
 
-            User nickUser = userBuilder.build();
-            nickUser.setNick(args[2].substring(1));
+                User.Builder userBuilder = new User.Builder();
+                userBuilder.setNick(oldNick);
 
-            onNickChangeListeners.forEach((listener) -> listener.onNickChange(this, nickUser));
+                User nickUser = userBuilder.build();
+                nickUser.setNick(args[2].substring(1));
+
+                getListeners(OnNickChangeListener.TYPE).forEach(
+                        (listener -> ((OnNickChangeListener) listener).onNickChange(connection, nickUser)));
+            }
         });
 
-        addListener("PART", (connection, message, command, args) -> {
-            Channel channel = channels.get(args[2]);
+        addListener(new OnServerMessageListener() {
+            @Override
+            public String serverMessage() {
+                return "PART";
+            }
 
-            if (channel != null) {
-                User user = new User(message.substring(1, message.indexOf("!")));
-                onPartListeners.forEach((listener) -> listener.onPart(this, user, channel));
+            @Override
+            public void onServerMessage(Connection connection, String message, String command, String... args) {
+                Channel channel = channels.get(args[2]);
+
+                if (channel != null) {
+                    User user = new User(message.substring(1, message.indexOf("!")));
+
+                    getListeners(OnPartListener.TYPE).forEach(
+                            (listener -> ((OnPartListener) listener).onPart(connection, user,channel)));
+                }
             }
         });
     }
@@ -159,7 +245,8 @@ public final class Connection extends ConnectionListener {
     }
 
     public void disconnect() {
-        onDisconnectListeners.forEach((listener) -> listener.onDisconnect(this, server));
+        getListeners(OnDisconnectListener.TYPE).forEach(
+                (listener -> ((OnDisconnectListener) listener).onDisconnect(this, server)));
     }
 
     public void join(Channel channel) {
@@ -181,30 +268,22 @@ public final class Connection extends ConnectionListener {
                 // Raw code
                 int rawCode = Integer.parseInt(splittedLine[1]);
 
-                ArrayList<OnRawCodeListener> rawCodeListeners = onRawCodeListeners.get(rawCode);
-                if (rawCodeListeners != null) {
-                    // Must use for instead of foreach to avoid ConcurrentModificationException
-                    for (int i = 0; i < rawCodeListeners.size(); i++) {
-                        OnRawCodeListener rawCodeListener = rawCodeListeners.get(i);
-                        rawCodeListener.onRawCode(this, line, rawCode, splittedLine);
-                    }
+                ArrayList<? extends Listener> rawCodeListeners = getListeners(OnRawCodeListener.TYPE);
+                // Must use for instead of foreach to avoid ConcurrentModificationException
+                for(int i = 0; i < rawCodeListeners.size(); i++) {
+                    OnRawCodeListener rawCodeListener = (OnRawCodeListener) rawCodeListeners.get(i);
+                    if (rawCodeListener.rawCode() == rawCode) rawCodeListener.onRawCode(this, line, rawCode, splittedLine);
                 }
-
             } catch (NumberFormatException e) {
-                // Not a Raw code
-                String command = splittedLine[1].toUpperCase();
+                for(Listener listener : getListeners(OnServerMessageListener.TYPE)) {
+                    OnServerMessageListener serverMessageListener = (OnServerMessageListener) listener;
 
-                // Try with first string (e.g, for PING)
-                if (!onServerMessageListeners.containsKey(command)) {
-                    command = splittedLine[0].toUpperCase();
-                }
-
-                ArrayList<OnServerMessageListener> serverMessageListeners = onServerMessageListeners.get(command);
-
-                if (serverMessageListeners != null)
-                    for (OnServerMessageListener onServerMessageListener : serverMessageListeners) {
-                        onServerMessageListener.onServerMessage(this, line, command, splittedLine);
+                    // Commands usually are in position 0, but PING is on position 1
+                    for (int i = 0; i <= 1; i++) {
+                        String command = splittedLine[i].toUpperCase();
+                        if (command.equals(serverMessageListener.serverMessage())) serverMessageListener.onServerMessage(this, line, command, splittedLine);
                     }
+                }
             }
         }
 
@@ -317,19 +396,5 @@ public final class Connection extends ConnectionListener {
         this.channels.forEach((name, channel) -> channels.add(channel));
 
         return channels;
-    }
-
-    private void addListener(String command, OnServerMessageListener listener) {
-        command = command.toUpperCase();
-
-        ArrayList<OnServerMessageListener> currentListeners = onServerMessageListeners.get(command);
-
-        if (currentListeners == null) {
-            currentListeners = new ArrayList<>();
-        }
-
-        currentListeners.add(listener);
-
-        onServerMessageListeners.put(command, currentListeners);
     }
 }
