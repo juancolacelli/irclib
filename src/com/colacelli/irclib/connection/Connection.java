@@ -260,30 +260,31 @@ public final class Connection extends ConnectionListener {
         String line;
 
         while ((line = connector.listen()) != null) {
-            System.out.println(line);
+            if (!line.isEmpty()) {
+                System.out.println(line);
+                String[] splittedLine = line.split(" ");
 
-            String[] splittedLine = line.split(" ");
+                try {
+                    // Raw code
+                    int rawCode = Integer.parseInt(splittedLine[1]);
 
-            try {
-                // Raw code
-                int rawCode = Integer.parseInt(splittedLine[1]);
+                    ArrayList<? extends Listener> rawCodeListeners = getListeners(OnRawCodeListener.TYPE);
+                    // Must use for instead of foreach to avoid ConcurrentModificationException
+                    for (int i = 0; i < rawCodeListeners.size(); i++) {
+                        OnRawCodeListener rawCodeListener = (OnRawCodeListener) rawCodeListeners.get(i);
+                        if (rawCodeListener.rawCode() == rawCode)
+                            rawCodeListener.onRawCode(this, line, rawCode, splittedLine);
+                    }
+                } catch (NumberFormatException e) {
+                    for (Listener listener : getListeners(OnServerMessageListener.TYPE)) {
+                        OnServerMessageListener serverMessageListener = (OnServerMessageListener) listener;
 
-                ArrayList<? extends Listener> rawCodeListeners = getListeners(OnRawCodeListener.TYPE);
-                // Must use for instead of foreach to avoid ConcurrentModificationException
-                for (int i = 0; i < rawCodeListeners.size(); i++) {
-                    OnRawCodeListener rawCodeListener = (OnRawCodeListener) rawCodeListeners.get(i);
-                    if (rawCodeListener.rawCode() == rawCode)
-                        rawCodeListener.onRawCode(this, line, rawCode, splittedLine);
-                }
-            } catch (NumberFormatException e) {
-                for (Listener listener : getListeners(OnServerMessageListener.TYPE)) {
-                    OnServerMessageListener serverMessageListener = (OnServerMessageListener) listener;
-
-                    // Commands usually are in position 0, but PING is on position 1
-                    for (int i = 0; i <= 1; i++) {
-                        String command = splittedLine[i].toUpperCase();
-                        if (command.equals(serverMessageListener.serverMessage()))
-                            serverMessageListener.onServerMessage(this, line, command, splittedLine);
+                        // Commands usually are in position 0, but PING is on position 1
+                        for (int i = 0; i <= 1; i++) {
+                            String command = splittedLine[i].toUpperCase();
+                            if (command.equals(serverMessageListener.serverMessage()))
+                                serverMessageListener.onServerMessage(this, line, command, splittedLine);
+                        }
                     }
                 }
             }
@@ -349,12 +350,20 @@ public final class Connection extends ConnectionListener {
         send("MODE " + channel.getName() + " " + mode);
     }
 
+    public void invite(Channel channel, User user) {
+        send("INVITE " + user.getNick() + " :" + channel.getName());
+    }
+
+    public void kill(User user, String reason) {
+        send("KILL " + user.getNick() + " " + reason);
+    }
+
     public void whois(User user) {
         send("WHOIS " + user.getNick());
     }
 
     public void topic(Channel channel, String topic) {
-        send("TOPIC " + channel.getName() + " " + topic);
+        send("TOPIC " + channel.getName() + " :" + topic);
     }
 
     public void kick(Channel channel, User user, String reason) {

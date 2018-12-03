@@ -4,13 +4,12 @@ import com.colacelli.irclib.actors.User;
 import com.colacelli.irclib.connection.Server;
 
 import javax.net.ssl.*;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 
-public class SecureConnector extends Connector {
+public class SecureConnector implements Connector {
     private final TrustManager[] trustAllCerts = new TrustManager[]{
             new X509TrustManager() {
                 public X509Certificate[] getAcceptedIssuers() {
@@ -24,16 +23,17 @@ public class SecureConnector extends Connector {
                 }
             }
     };
+    BufferedReader reader;
     private SSLSocket socket;
     private DataOutputStream writer;
-    private DataInputStream reader;
 
     @Override
     public void connect(Server newServer, User newUser) throws IOException {
         SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         socket = (SSLSocket) factory.createSocket(newServer.getHostname(), newServer.getPort());
         writer = new DataOutputStream(socket.getOutputStream());
-        reader = new DataInputStream(socket.getInputStream());
+        DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+        reader = new BufferedReader(new InputStreamReader(dataInputStream, StandardCharsets.UTF_8));
 
         try {
 
@@ -53,7 +53,6 @@ public class SecureConnector extends Connector {
 
     @Override
     public String listen() throws IOException {
-        // FIXME: readLine() is deprecated
         return reader.readLine();
     }
 

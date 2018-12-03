@@ -6,7 +6,7 @@ import com.colacelli.irclib.connection.Server;
 import java.io.*;
 import java.net.Socket;
 
-public class UnsecureConnector extends Connector {
+public class UnsecureConnector implements Connector {
     private Socket socket;
     private BufferedWriter writer;
     private BufferedReader reader;
