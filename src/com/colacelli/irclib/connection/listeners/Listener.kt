@@ -1,11 +1,7 @@
-package com.colacelli.irclib.connection.listeners;
+package com.colacelli.irclib.connection.listeners
 
-public interface Listener {
-    Type TYPE = Type.LISTENER;
-
-    Type getType();
-
-    enum Type {
+interface Listener {
+    enum class Type {
         LISTENER,
         CHANNEL_MESSAGE,
         CHANNEL_MODE,
@@ -22,5 +18,12 @@ public interface Listener {
         PRIVATE_NOTICE,
         RAW_CODE,
         SERVER_MESSAGE
+    }
+
+    val type: Type
+        get() = TYPE
+
+    companion object {
+        val TYPE = Type.LISTENER
     }
 }
