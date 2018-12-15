@@ -286,6 +286,7 @@ class Connection(val server: Server, val user: User) : Listenable {
     }
 
     fun send(text: String) {
+        println(text)
         connector.send(text)
     }
 
