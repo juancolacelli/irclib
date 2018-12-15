@@ -13,7 +13,7 @@ import kotlin.random.Random
 class Connection(val server: Server, val user: User) : Listenable {
     private val listeners = HashMap<Listener.Type, ArrayList<Listener>>()
     private val channels = HashMap<String, Channel>()
-    private var connector : Connector = PlainConnector()
+    private var connector: Connector = PlainConnector()
 
     init {
         if (server.ssl) connector = SSLConnector()
@@ -279,7 +279,7 @@ class Connection(val server: Server, val user: User) : Listenable {
                         // Listener deleted while looping!
                     }
                 }
-            } catch (e : IOException) {
+            } catch (e: IOException) {
                 reconnect()
             }
         }
@@ -290,42 +290,42 @@ class Connection(val server: Server, val user: User) : Listenable {
         connector.send(text)
     }
 
-    fun send(message : ChannelMessage) {
+    fun send(message: ChannelMessage) {
         message.sender = user
         send("PRIVMSG ${message.channel.name} :${message.text}")
     }
 
-    fun send(message : ChannelNoticeMessage) {
+    fun send(message: ChannelNoticeMessage) {
         message.sender = user
         send("NOTICE ${message.channel.name} :${message.text}")
     }
 
-    fun send(message : PrivateMessage) {
+    fun send(message: PrivateMessage) {
         message.sender = user
         send("PRIVMSG ${message.receiver?.nick} :${message.text}")
     }
 
-    fun send(message : PrivateNoticeMessage) {
+    fun send(message: PrivateNoticeMessage) {
         message.sender = user
         send("NOTICE ${message.receiver?.nick} :${message.text}")
     }
 
-    fun send(message : CTCPMessage) {
+    fun send(message: CTCPMessage) {
         message.sender = user
         send("NOTICE ${message.receiver?.nick} :$message")
     }
 
-    fun nick(nick: String){
+    fun nick(nick: String) {
         user.oldNick = user.nick
         user.nick = nick
         send("NICK $nick")
     }
 
-    fun mode(mode : String) {
+    fun mode(mode: String) {
         send("MODE $mode")
     }
 
-    fun mode(channel: Channel, mode : String) {
+    fun mode(channel: Channel, mode: String) {
         send("MODE ${channel.name} $mode")
     }
 

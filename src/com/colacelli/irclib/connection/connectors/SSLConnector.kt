@@ -12,9 +12,9 @@ import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
 
 class SSLConnector : Connector {
-    var socket : SSLSocket? = null
-    var reader : BufferedReader? = null
-    var writer : DataOutputStream? = null
+    var socket: SSLSocket? = null
+    var reader: BufferedReader? = null
+    var writer: DataOutputStream? = null
 
     override fun connect(server: Server, user: User) {
         val socketFactory = SSLSocketFactory.getDefault()
