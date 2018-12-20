@@ -250,36 +250,33 @@ class Connection(val server: Server, val user: User) : Listenable {
                     val words = text.split(" ")
 
                     // Raw code?
-                    // Always use for instead of forEach to prevent errors when a listener is removed
-                    try {
-                        try {
-                            val rawCode = words[1].toInt()
-                            for (i in 0 until listeners[OnRawCodeListener.TYPE]!!.size) {
-                                val it = listeners[OnRawCodeListener.TYPE]!![i]
+                    val rawCode = try {
+                        words[1].toInt()
+                    } catch (e: NumberFormatException) {
+                        -1
+                    }
 
-                                if (it is OnRawCodeListener && it.rawCode() == rawCode) {
-                                    it.onRawCode(this, text, rawCode, words)
-                                }
+                    if (rawCode > -1) {
+                        listeners[OnRawCodeListener.TYPE]!!.toTypedArray().forEach {
+                            if (it is OnRawCodeListener && it.rawCode() == rawCode) {
+                                it.onRawCode(this, text, rawCode, words)
                             }
-                        } catch (e: NumberFormatException) {
-                            for (i in 0 until listeners[OnServerMessageListener.TYPE]!!.size) {
-                                val it = listeners[OnServerMessageListener.TYPE]!![i]
-
-                                if (it is OnServerMessageListener) {
-                                    for (j in 0..1) {
-                                        val serverMessage = words[j].toUpperCase()
-                                        if (it.serverMessage() == serverMessage) {
-                                            it.onServerMessage(this, text, serverMessage, words)
-                                        }
+                        }
+                    } else {
+                        listeners[OnServerMessageListener.TYPE]!!.toTypedArray().forEach {
+                            if (it is OnServerMessageListener) {
+                                for (j in 0..1) {
+                                    val serverMessage = words[j].toUpperCase()
+                                    if (it.serverMessage() == serverMessage) {
+                                        it.onServerMessage(this, text, serverMessage, words)
                                     }
                                 }
                             }
                         }
-                    } catch (e: IndexOutOfBoundsException) {
-                        // Listener deleted while looping!
                     }
                 }
             } catch (e: IOException) {
+                e.printStackTrace()
                 reconnect()
             }
         }
@@ -322,7 +319,7 @@ class Connection(val server: Server, val user: User) : Listenable {
     }
 
     fun mode(mode: String) {
-        send("MODE $mode")
+        send("MODE ${user.nick} $mode")
     }
 
     fun mode(channel: Channel, mode: String) {
