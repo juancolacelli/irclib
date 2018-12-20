@@ -7,7 +7,6 @@ import com.colacelli.irclib.connection.connectors.PlainConnector
 import com.colacelli.irclib.connection.connectors.SSLConnector
 import com.colacelli.irclib.connection.listeners.*
 import com.colacelli.irclib.messages.*
-import java.io.IOException
 import kotlin.random.Random
 
 class Connection(val server: Server, val user: User) : Listenable {
@@ -234,50 +233,50 @@ class Connection(val server: Server, val user: User) : Listenable {
         }
     }
 
-    fun reconnect() {
-        disconnect()
-        connect()
-    }
-
     private fun listen() {
         // FIXME: while (line = connector.listen()) != null doesn't work in Kotlin
         while (true) {
             try {
                 val text = connector.listen()
-                if (text.isNotBlank()) {
-                    println(text)
+                if (text != null) {
+                    if (text.isNotBlank()) {
+                        println(text)
 
-                    val words = text.split(" ")
+                        val words = text.split(" ")
 
-                    // Raw code?
-                    val rawCode = try {
-                        words[1].toInt()
-                    } catch (e: NumberFormatException) {
-                        -1
-                    }
-
-                    if (rawCode > -1) {
-                        listeners[OnRawCodeListener.TYPE]!!.toTypedArray().forEach {
-                            if (it is OnRawCodeListener && it.rawCode() == rawCode) {
-                                it.onRawCode(this, text, rawCode, words)
-                            }
+                        // Raw code?
+                        val rawCode = try {
+                            words[1].toInt()
+                        } catch (e: NumberFormatException) {
+                            -1
                         }
-                    } else {
-                        listeners[OnServerMessageListener.TYPE]!!.toTypedArray().forEach {
-                            if (it is OnServerMessageListener) {
-                                for (j in 0..1) {
-                                    val serverMessage = words[j].toUpperCase()
-                                    if (it.serverMessage() == serverMessage) {
-                                        it.onServerMessage(this, text, serverMessage, words)
+
+                        if (rawCode > -1) {
+                            listeners[OnRawCodeListener.TYPE]!!.toTypedArray().forEach {
+                                if (it is OnRawCodeListener && it.rawCode() == rawCode) {
+                                    it.onRawCode(this, text, rawCode, words)
+                                }
+                            }
+                        } else {
+                            listeners[OnServerMessageListener.TYPE]!!.toTypedArray().forEach {
+                                if (it is OnServerMessageListener) {
+                                    for (j in 0..1) {
+                                        val serverMessage = words[j].toUpperCase()
+                                        if (it.serverMessage() == serverMessage) {
+                                            it.onServerMessage(this, text, serverMessage, words)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                } else {
+                    // Disconnected!
+                    disconnect()
                 }
-            } catch (e: IOException) {
+            } catch (e: Exception) {
                 e.printStackTrace()
-                reconnect()
+                disconnect()
             }
         }
     }

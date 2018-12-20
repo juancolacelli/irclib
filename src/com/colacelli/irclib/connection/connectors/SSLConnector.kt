@@ -30,7 +30,7 @@ class SSLConnector : Connector {
         socket!!.close()
     }
 
-    override fun listen(): String {
+    override fun listen(): String? {
         return reader!!.readLine()
     }
 

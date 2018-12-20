@@ -14,7 +14,7 @@ interface Connector {
     fun disconnect()
 
     @Throws(IOException::class)
-    fun listen(): String
+    fun listen(): String?
 
     @Throws(IOException::class)
     fun send(text: String)
