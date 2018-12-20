@@ -175,7 +175,7 @@ class Connection(val server: Server, val user: User) : Listenable {
                 if (channel != null) {
                     listeners[OnChannelModeListener.TYPE]?.forEach {
                         if (it is OnChannelModeListener) {
-                            it.onChannelMode(connection, channel, args[3])
+                            it.onChannelMode(connection, channel, args[3], *args.drop(4).toTypedArray())
                         }
                     }
                 }

@@ -4,7 +4,7 @@ import com.colacelli.irclib.actors.Channel
 import com.colacelli.irclib.connection.Connection
 
 interface OnChannelModeListener : Listener {
-    fun onChannelMode(connection: Connection, channel: Channel, mode: String)
+    fun onChannelMode(connection: Connection, channel: Channel, mode: String, vararg args: String)
 
     override val type: Listener.Type
         get() = TYPE
