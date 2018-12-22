@@ -1,13 +1,22 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    base
-    java
-    idea
+    kotlin("jvm") version "1.3.11"
 }
 
-allprojects {
-    group = "com.colacelli"
+repositories {
+    mavenCentral()
+}
 
-    repositories {
-        mavenCentral()
-    }
+dependencies {
+    compile(kotlin("stdlib-jdk8"))
+}
+
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }
