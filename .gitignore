@@ -25,3 +25,6 @@ hs_err_pid*
 
 # Artifacts
 */META-INF/*
+
+# Gradle
+.gradle/
