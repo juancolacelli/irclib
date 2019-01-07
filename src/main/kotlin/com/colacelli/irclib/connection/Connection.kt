@@ -24,7 +24,17 @@ class Connection(val server: Server, val user: User) : Listenable {
             }
 
             override fun onRawCode(connection: Connection, message: String, rawCode: Int, args: List<String>) {
-                nick("${user.nick} ${Random.nextInt(10)}")
+                nick("${user.nick} ${Random.nextInt(10000)}")
+            }
+        })
+
+        addListener(object : OnRawCodeListener {
+            override fun rawCode(): Int {
+                return Rawable.RawCode.ERRONEUS_NICKNAME.code
+            }
+
+            override fun onRawCode(connection: Connection, message: String, rawCode: Int, args: List<String>) {
+                nick("${user.nick} ${Random.nextInt(10000)}")
             }
         })
 

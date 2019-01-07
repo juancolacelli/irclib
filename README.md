@@ -1,4 +1,4 @@
-#GNU IRC Lib
+# GNU IRC Lib
 [![](https://jitpack.io/v/com.gitlab.jic/irclib.svg)](https://jitpack.io/#com.gitlab.jic/irclib)
 
 ## Showcase
