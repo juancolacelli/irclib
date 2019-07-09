@@ -1,6 +1,6 @@
 # GNU IRC Lib
-[![](https://jitpack.io/v/com.gitlab.jic/irclib.svg)](https://jitpack.io/#com.gitlab.jic/irclib)
+[![](https://jitpack.io/v/com.gitlab.juancolacelli/irclib.svg)](https://jitpack.io/#com.gitlab.juancolacelli/irclib)
 
 ## Showcase
-* **GNU IRC Bot**: https://gitlab.com/jic/ircbot
-* **GNU Librebot**: https://gitlab.com/jic/librebot
+* **GNU IRC Bot**: https://gitlab.com/juancolacelli/ircbot
+* **GNU Librebot**: https://gitlab.com/juancolacelli/librebot
